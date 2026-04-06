@@ -2,34 +2,52 @@ import { useState } from "react";
 import { Title } from "./conponents/Title";
 import { InputForm } from "./conponents/InputForm";
 import { HabitList } from "./conponents/HabitList";
+import { useEffect } from "react";
 
 export const App = () => {
   const [habitForm, setHabitForm] = useState("");
+  //ユーザー操作をデータとして管理してる
   const [habitList, setHabitList] =
-    useState([{
-      id: 0,
-      text: "瞑想",
-      count: 0
-    },
-    {
-      id: 1,
-      text: "朝散歩",
-      count: 0
-    },
-    {
-      id: 2,
-      text: "寝る前ヨガ",
-      count: 0
-    }]);
+    useState(() => {
+      const data = localStorage.getItem("habitList");
+      return data ? JSON.parse(data) : [];
+    })
+
+
+  useEffect(() => {
+    localStorage.setItem("habitList",
+      JSON.stringify(habitList)
+    )
+  }, [habitList]
+  );
+  //useEffectの第二引数である[habitList]が変更されて点火したら、この処理してねっていうuseEffectの処理を作ってるコード。 　
+  //で、内容がhabitListの内容をJSON化、str型化lさせて、localStrageってメモ帳にsetItemって関数で保存している。
+
+
+
+
 
   const onClickHabitAdd = () => {
+    if (habitForm.trim() === ("")) {
+      setHabitForm("");
+      return;
+    }
+    //ユーザー入力のバリデーション(入力がおかしくないかチェック)してる
+    const textHabitList = habitList.map(
+      habitList => habitList.text
+    );
+    if (textHabitList.includes(habitForm)) {
+      setHabitForm("");
+      return;
+    }
+
     setHabitList([...habitList, { id: habitList.length, text: habitForm, count: 0 }])
     setHabitForm("");
   }
 
-  const onClickPlus = (reHabit) => {
+  const onClickPlus = (plusHabit) => {
     const arrForPlus = habitList.map((habit) => {
-      if (habit.id === reHabit.id)
+      if (habit.id === plusHabit.id)
         return {
           ...habit, count: habit.count + 1
         }; else {
@@ -39,9 +57,9 @@ export const App = () => {
     setHabitList(arrForPlus)
   }
 
-  const onClickMinus = (reReHabit) => {
+  const onClickMinus = (minusHabit) => {
     const arrForMinus = habitList.map((habit) => {
-      if (habit.id === reReHabit.id) {
+      if (habit.id === minusHabit.id) {
         if (habit.count === 0) {
           return habit
         }
@@ -54,11 +72,47 @@ export const App = () => {
     setHabitList(arrForMinus)
   }
 
+  const onClickUp = (index) => {
+    //指定した要素と1つ前の要素を入れ替えて順番を上に移動させる関数
+    //つまり
+    ////指定indexとその前の要素をswapして表示順を変更する関数
+    if (index === 0) return;
+    const arrForUp = [...habitList];
+    const temp = arrForUp[index - 1];
+
+    arrForUp[index - 1] = arrForUp[index];
+    arrForUp[index] = temp;
+    setHabitList(arrForUp);
+  }
+
+  const onClickDown = (index) => {
+    ////指定indexと次の要素をswapして順番を下に移動する関数。
+    const arrForDown = [...habitList];
+    const temp = arrForDown[index + 1];
+    //swapのために一時保存。
+    if (index === arrForDown.length - 1) return;
+    arrForDown[index + 1] = arrForDown[index];
+    arrForDown[index] = temp;
+    setHabitList(arrForDown);
+  };
+
+
+
+  const onClickDelete = (deleteHabit) => {
+    const arrForDelete = habitList.filter((
+      habit) => {
+      return habit.id !== deleteHabit.id
+    })
+    setHabitList(arrForDelete);
+  }
+
+
+
 
 
 
   return (
-    <div className="bg-orage-100 rounded-lg h-auto w-auto shadow flex flex-col">
+    <div className="bg-orange-100 rounded-lg h-auto w-auto shadow flex flex-col">
       <Title />
       <div className="h-190 bg-orange-100">
         <InputForm
@@ -70,7 +124,11 @@ export const App = () => {
           habitList={habitList}
           onClickPlus={onClickPlus}
           onClickMinus={onClickMinus}
+          onClickDelete={onClickDelete}
+          onClickUp={onClickUp}
+          onClickDown={onClickDown}
         />
+
       </div>
 
     </div>
