@@ -41,7 +41,7 @@ export const App = () => {
       return;
     }
 
-    setHabitList([...habitList, { id: habitList.length, text: habitForm, count: 0 }])
+    setHabitList([...habitList, { id: Date.now(), text: habitForm, count: 0 }])
     setHabitForm("");
   }
 
